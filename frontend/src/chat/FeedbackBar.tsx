@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
 
-import type { Feedback, FeedbackRating, FeedbackReason } from "./api";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { Feedback, FeedbackRating, FeedbackReason } from "@/api";
+import { Button } from "@/components/Button";
+import { ChoiceChips } from "@/components/ChoiceChips";
+import { Textarea } from "@/components/Textarea";
 
 // Per-reply feedback state for this visit (spec 004 data-model.md).
 export type FeedbackState = {
@@ -81,59 +81,41 @@ export default function FeedbackBar({ state, onSubmit, onRetry }: Props) {
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 text-muted">
         <Button
-          type="button"
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           aria-label="Helpful"
           aria-pressed={saved?.rating === "up"}
           disabled={saving}
-          className="aria-pressed:text-primary"
           onClick={() => rate("up")}
         >
-          <ThumbsUpIcon />
+          <ThumbsUpIcon aria-hidden />
         </Button>
         <Button
-          type="button"
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           aria-label="Not helpful"
           aria-pressed={saved?.rating === "down"}
           disabled={saving}
-          className="aria-pressed:text-primary"
           onClick={() => rate("down")}
         >
-          <ThumbsDownIcon />
+          <ThumbsDownIcon aria-hidden />
         </Button>
         {saved?.rating === "up" && !panelOpen && (
-          <Button type="button" variant="link" size="sm" className="h-auto px-1 text-xs" onClick={() => open("up")}>
+          <Button variant="link" size="sm" className="px-1 text-xs" onClick={() => open("up")}>
             Add a comment
           </Button>
         )}
-        {thanks && !panelOpen && <span className="px-1 text-xs text-muted-foreground">Thanks for your feedback</span>}
+        {thanks && !panelOpen && <span className="px-1 text-xs text-muted">Thanks for your feedback</span>}
       </div>
 
       {panelOpen && (
-        <div className="flex max-w-md flex-col gap-2 rounded-lg border border-border bg-card p-3">
+        <div className="flex max-w-md flex-col gap-3 rounded-lg border border-line bg-white p-4 shadow-hairline">
           {openFor === "down" && (
             <>
-              <p className="text-sm font-medium">What went wrong? (optional)</p>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label="Reason"
-                className="flex-wrap"
-                value={reason}
-                onValueChange={(v) => setReason(v as FeedbackReason | "")}
-              >
-                {REASONS.map((r) => (
-                  <ToggleGroupItem key={r.value} value={r.value} className="rounded-full">
-                    {r.label}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
+              <p className="text-sm font-bold text-navy">What went wrong? (optional)</p>
+              <ChoiceChips label="Reason" options={REASONS} value={reason} onChange={setReason} />
             </>
           )}
           <Textarea
@@ -142,15 +124,14 @@ export default function FeedbackBar({ state, onSubmit, onRetry }: Props) {
             maxLength={MAX_COMMENT}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="min-h-16 text-sm"
           />
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">{MAX_COMMENT - comment.length} characters left</span>
+            <span className="text-xs text-muted">{MAX_COMMENT - comment.length} characters left</span>
             <div className="flex gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={() => setOpenFor(null)}>
+              <Button variant="ghost" size="sm" onClick={() => setOpenFor(null)}>
                 Close
               </Button>
-              <Button type="button" size="sm" disabled={saving} onClick={send}>
+              <Button variant="primary" size="sm" disabled={saving} onClick={send}>
                 Send feedback
               </Button>
             </div>
@@ -159,9 +140,9 @@ export default function FeedbackBar({ state, onSubmit, onRetry }: Props) {
       )}
 
       {state?.error && (
-        <p role="alert" className="flex items-center gap-1 text-xs text-destructive">
+        <p role="alert" className="flex items-center gap-1 text-xs text-warning-700">
           Couldn't save your feedback.
-          <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={onRetry}>
+          <Button variant="link" size="sm" className="text-xs" onClick={onRetry}>
             Retry
           </Button>
         </p>

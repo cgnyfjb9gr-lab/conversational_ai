@@ -1,0 +1,19 @@
+/* Source Sans 3 stands in for FS Elliot Pro, Principal's licensed brand font (see theme.css). */
+@import '@fontsource/source-sans-3/300.css';
+@import '@fontsource/source-sans-3/400.css';
+@import '@fontsource/source-sans-3/700.css';
+@import './theme.css';
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-page font-sans text-sm text-ink antialiased;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}

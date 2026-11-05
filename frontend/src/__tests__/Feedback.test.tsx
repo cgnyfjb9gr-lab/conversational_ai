@@ -3,13 +3,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../App";
-import { installServer, seed, type Server } from "./helpers";
+import { history, installServer, messageBox, openHistory, seed, signInAs, type Server } from "./helpers";
 
 const KEY = "convai.sessionIds";
 let server: Server;
 
 beforeEach(() => {
   localStorage.clear();
+  signInAs();
   server = installServer();
 });
 
@@ -24,12 +25,13 @@ const pressed = (name: string) => screen.getByRole("button", { name }).getAttrib
 
 async function renderApp() {
   render(<App />);
+  openHistory();
   await screen.findByText(/no past chats yet/i);
 }
 
 /** Send a message and wait for its reply; returns the reply's message id. */
 async function chat(text: string): Promise<number> {
-  fireEvent.change(screen.getByPlaceholderText("Type a message"), { target: { value: text } });
+  fireEvent.change(messageBox(), { target: { value: text } });
   fireEvent.click(screen.getByRole("button", { name: "Send" }));
   await screen.findByText(`(mock) You said: ${text}`);
   const reply = [...server.sessions.values()].flatMap((s) => s.messages).filter((m) => m.role === "assistant").at(-1)!;
@@ -73,7 +75,7 @@ describe("spec 004 US1: rate an answer", () => {
         init?.method === "POST" ? new Response("{}", { status: 500 }) : ok(input, init),
       ),
     );
-    fireEvent.change(screen.getByPlaceholderText("Type a message"), { target: { value: "fails" } });
+    fireEvent.change(messageBox(), { target: { value: "fails" } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
     await screen.findByText("Something went wrong.");
     expect(screen.queryByRole("button", { name: "Helpful" })).toBeNull();
@@ -83,7 +85,8 @@ describe("spec 004 US1: rate an answer", () => {
     seed(server, "a", [["first topic", "(mock) You said: first topic"]]);
     localStorage.setItem(KEY, JSON.stringify(["a"]));
     render(<App />);
-    fireEvent.click(within(await screen.findByRole("navigation")).getByRole("button", { name: /first topic/ }));
+    openHistory();
+    fireEvent.click(await history().findByRole("button", { name: /first topic/ }));
     await screen.findByText("(mock) You said: first topic");
     const replyId = server.sessions.get("a")!.messages[1].id;
     expect(pressed("Helpful")).toBe("false");
@@ -126,15 +129,14 @@ describe("spec 004 US1: rate an answer", () => {
     seed(server, "b", [["other topic", "(mock) You said: other topic"]]);
     localStorage.setItem(KEY, JSON.stringify(["b"]));
     render(<App />);
-    await screen.findByText("other topic");
+    await openHistory().findByText("other topic");
     await chat("hello");
     fireEvent.click(screen.getByRole("button", { name: "Helpful" }));
     await waitFor(() => expect(pressed("Helpful")).toBe("true"));
 
-    const nav = () => within(screen.getByRole("navigation"));
-    fireEvent.click(nav().getByRole("button", { name: /other topic/ }));
+    fireEvent.click(history().getByRole("button", { name: /other topic/ }));
     await screen.findByText("(mock) You said: other topic");
-    fireEvent.click(nav().getByRole("button", { name: /hello/ }));
+    fireEvent.click(await history().findByRole("button", { name: /hello/ }));
     await screen.findByText("(mock) You said: hello");
     expect(pressed("Helpful")).toBe("true");
   });

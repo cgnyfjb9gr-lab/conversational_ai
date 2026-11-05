@@ -3,12 +3,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../App";
-import { installServer, type Server } from "./helpers";
+import { installServer, messageBox, openHistory, signInAs, type Server } from "./helpers";
 
 let server: Server;
 
 beforeEach(() => {
   localStorage.clear();
+  signInAs();
   server = installServer();
 });
 
@@ -17,13 +18,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const box = () => screen.getByPlaceholderText("Type a message") as HTMLTextAreaElement;
+const box = messageBox;
 const shownMessages = () =>
   Array.from(document.querySelectorAll(".message")).map((el) => el.textContent ?? "");
 const chatPosts = () => server.calls.filter((c) => c.method === "POST" && c.url === "/api/chat");
 
 async function renderApp() {
   render(<App />);
+  openHistory();
   await screen.findByText(/no past chats yet/i);
 }
 

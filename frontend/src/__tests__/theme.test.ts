@@ -1,50 +1,46 @@
-// Spec 003, User Story 2: theme values (SC-003) live in one file (FR-007, SC-005).
-// Navy palette and dark mode amended by spec 005 (UI-006, UI-007).
-// Values: specs/003-shadcn-ai-elements/contracts/theme-tokens.md
+// Design tokens come from Figma and live in one file: src/styles/theme.css.
 import { describe, expect, it } from "vitest";
 
-import themeCss from "../theme/principal.css?raw";
+import themeCss from "../styles/theme.css?raw";
 
-// Every other source file, as text (excludes the theme folder and the tests).
-const sources = import.meta.glob<string>(["../**/*.{ts,tsx,css}", "!../theme/**", "!./**"], {
+// Every other source file, as text (excludes the theme file and the tests).
+const sources = import.meta.glob<string>(["../**/*.{ts,tsx,css}", "!../styles/theme.css", "!./**"], {
   query: "?raw",
   import: "default",
   eager: true,
 });
 
-function block(css: string, selector: string): string {
-  const start = css.indexOf(`${selector} {`);
-  return start < 0 ? "" : css.slice(start, css.indexOf("}", start));
+function token(name: string): string | undefined {
+  return themeCss.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim();
 }
 
-function variable(css: string, name: string): string | undefined {
-  return css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim();
-}
-
-describe("spec 003 US2: theme", () => {
-  it("defines the navy light values in src/theme/principal.css", () => {
-    const light = block(themeCss, ":root");
-    expect(variable(light, "--primary")).toBe("#0b3a6e");
-    expect(variable(light, "--primary-hover")).toBe("#0e4a8c");
-    expect(variable(light, "--foreground")).toBe("#16202c");
-    expect(variable(light, "--secondary")).toBe("#e8f0fa");
-    expect(variable(light, "--brand-accent")).toBe("#4cc3e8");
-    expect(variable(light, "--ring")).toBe("#3871ff");
-    expect(variable(light, "--radius")).toBe("1.5rem");
+describe("theme", () => {
+  it("defines the Figma brand colors, type and radii in src/styles/theme.css", () => {
+    expect(token("--color-primary")).toBe("#005fb8");
+    expect(token("--color-navy")).toBe("#002855");
+    expect(token("--color-ink")).toBe("#2f2f2f");
+    expect(token("--color-page")).toBe("#f7f7f7");
+    expect(token("--color-info-100")).toBe("#e3f5fd");
+    expect(token("--font-sans")).toMatch(/^'FS Elliot Pro', 'Source Sans 3'/);
+    expect(token("--text-base")).toBe("16px");
+    expect(token("--radius-2xl")).toBe("24px");
   });
 
-  it("defines a dark palette for every color variable used in light mode", () => {
-    const light = block(themeCss, ":root");
-    const dark = block(themeCss, ".dark");
-    const colorVars = [...light.matchAll(/(--[\w-]+):\s*#/g)].map((m) => m[1]);
-    expect(colorVars.length).toBeGreaterThan(20);
-    for (const name of colorVars) expect(variable(dark, name), name).toMatch(/^#/);
+  it("removes Tailwind's default palette so only Figma colors exist", () => {
+    expect(themeCss).toMatch(/--color-\*:\s*initial;/);
   });
 
-  it("keeps brand colors out of every other source file", () => {
-    expect(Object.keys(sources).length).toBeGreaterThan(5); // the glob found the app files
+  it("keeps hex colors out of every other source file", () => {
+    expect(Object.keys(sources).length).toBeGreaterThan(10); // the glob found the app files
     const offenders = Object.entries(sources)
-      .filter(([, text]) => /#0b3a6e|#0e4a8c|#e8f0fa|#4cc3e8|#005fb8|#004c97|#002855|#e3f5fd/i.test(text))
+      .filter(([, text]) => /#[0-9a-f]{6}\b|#[0-9a-f]{3}\b/i.test(text))
+      .map(([file]) => file);
+    expect(offenders).toEqual([]);
+  });
+
+  it("uses no shadcn or Tailwind default color names in components", () => {
+    const offenders = Object.entries(sources)
+      .filter(([, text]) => /\b(?:bg|text|border)-(?:muted-foreground|foreground|background|destructive|gray-\d|slate-\d|blue-\d)\b/.test(text))
       .map(([file]) => file);
     expect(offenders).toEqual([]);
   });

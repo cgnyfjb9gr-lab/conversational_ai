@@ -1,6 +1,26 @@
+import { fireEvent, screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 
 import type { HistoryMessage, SessionSummary } from "../api";
+
+/** Start signed in (the demo sign-in keeps the username in localStorage). */
+export function signInAs(username = "vinod.patil@example.com") {
+  localStorage.setItem("convai.user", JSON.stringify({ username }));
+}
+
+/** Alfred's message box. */
+export const messageBox = () => screen.getByRole("textbox", { name: "Message Alfred" }) as HTMLTextAreaElement;
+
+/** Open the History panel from the rail (it starts closed) and return queries scoped to it. */
+export function openHistory() {
+  if (!screen.queryByRole("navigation", { name: "Past chats" })) {
+    fireEvent.click(screen.getByRole("button", { name: "History" }));
+  }
+  return within(screen.getByRole("navigation", { name: "Past chats" }));
+}
+
+/** Queries scoped to the (already open) History panel. */
+export const history = () => within(screen.getByRole("navigation", { name: "Past chats" }));
 
 export type Server = {
   sessions: Map<string, { title: string; messages: HistoryMessage[]; lastActive: number }>;

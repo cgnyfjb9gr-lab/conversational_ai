@@ -1,0 +1,140 @@
+/*
+ * Design tokens from Figma: "WPI Day 1.5 (P&A and P&E)", Entry flows section 10911:12205.
+ * Copied from the Alfred mock UI (mock-ui/src/styles/theme.css), which was extracted from Figma.
+ * These are the only colors, type sizes, radii and shadows components may use: no hex values
+ * anywhere else (a test enforces this). Light only; the design has no dark palette yet.
+ */
+@import 'tailwindcss';
+
+@theme {
+  /* Remove Tailwind's default palette: only Figma colors exist. */
+  --color-*: initial;
+
+  /* Type. FS Elliot Pro is Principal's licensed brand font; Source Sans 3 is the free fallback. */
+  --font-sans: 'FS Elliot Pro', 'Source Sans 3', system-ui, sans-serif;
+
+  /* Neutrals */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-ink: #2f2f2f;
+  --color-ink-2: #333333;
+  --color-muted: #5e5e5e;
+  --color-neutral-700: #4e4e4e;
+  --color-subtle: #757575;
+  --color-rule: #8b8b8b;
+  --color-line: #dedede;
+  --color-line-soft: #e5e7eb;
+  --color-page: #f7f7f7;
+
+  /* Brand blues */
+  --color-navy: #002855;
+  --color-navy-2: #003865;
+  --color-primary-strong: #004c97;
+  --color-primary: #005fb8;
+  --color-link: #0061a0;
+  --color-accent: #0076cf;
+  --color-accent-bright: #0091da;
+
+  /* Info (light blues) */
+  --color-info-50: #f0fbfe;
+  --color-info-75: #f2f9fd;
+  --color-info-100: #e3f5fd;
+  --color-info-200: #d2f1fd;
+  --color-info-300: #bbe6fc;
+  --color-info-400: #94d8fa;
+
+  /* Status */
+  --color-warning-700: #ae3b03;
+  --color-warning-500: #d64205;
+  --color-warning-100: #ffd6b8;
+  --color-success-700: #007138;
+  --color-success-600: #008744;
+  --color-success-500: #00c462;
+  --color-success-400: #00a251;
+  --color-success-50: #e6fff2;
+  --color-success-100: #c2ffe0;
+  --color-danger-500: #f95853;
+
+  /* Type scale (size / line height) as used in Figma */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 12px;
+  --text-xs: 12px;
+  --text-xs--line-height: 20px;
+  --text-sm: 14px;
+  --text-sm--line-height: 24px;
+  --text-base: 16px;
+  --text-base--line-height: 28px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 32px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 36px;
+  --text-3xl: 32px;
+  --text-3xl--line-height: 40px;
+  --text-4xl: 36px;
+  --text-4xl--line-height: 54px;
+  --text-5xl: 48px;
+  --text-5xl--line-height: 54px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  /* Shadows */
+  --shadow-card: 0 0 12px 2.5px rgb(0 0 0 / 0.1);
+  --shadow-soft: 0 4px 20px 0 rgb(0 0 0 / 0.05);
+  --shadow-nav: 0 4px 4px 0 rgb(0 0 0 / 0.25);
+  --shadow-float: 0 12px 40px 0 rgb(0 26 51 / 0.18);
+  --shadow-lift: 0 50px 60px -20px rgb(0 0 0 / 0.05);
+  --shadow-hairline: 0 0 2px 0.5px rgb(0 0 0 / 0.1);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.12);
+  --shadow-sm: 0 2px 4px 0.5px rgb(0 0 0 / 0.12);
+  --shadow-dropdown: 0 0 8px 1.5px rgb(0 0 0 / 0.1);
+
+  /* Layout */
+  --container-page: 1318px;
+}
+
+/* Named Figma gradients */
+@utility bg-ai {
+  background-image: linear-gradient(90deg, #004c97 25%, #0076cf 100%);
+}
+@utility bg-ai-sheen {
+  background-image: linear-gradient(90deg, #004c97 0%, #006ec5 30%, #0076cf 50%, #006ec4 70%, #004c97 100%);
+}
+@utility bg-logo {
+  background-image: linear-gradient(90deg, #0072bc 0%, #238fcf 50%, #00bed3 100%);
+}
+@utility bg-info-fade {
+  background-image: linear-gradient(180deg, #d2f1fd 25%, #f0fbfe 100%);
+}
+@utility bg-info-subtle {
+  background-image: linear-gradient(180deg, #f2f9fd 0%, #ffffff 100%);
+}
+@utility bg-page-fade {
+  background-image: linear-gradient(180deg, rgb(247 247 247 / 0) 0%, #f7f7f7 70%, #f7f7f7 100%);
+}
+@utility bg-aura {
+  background-image: radial-gradient(closest-side, #0091da 0%, rgb(255 255 255 / 0) 100%);
+}
+@utility bg-orb {
+  background-image: radial-gradient(circle at 35% 30%, #1f86d8 0%, #0e5aa8 55%, #08396f 100%);
+}
+@utility bg-chart-fill {
+  background-image: linear-gradient(180deg, rgb(148 216 250 / 0) 0%, #005fb8 100%);
+}
+/* 1px gradient border (Figma "Field" stroke): white fill + AI gradient border. */
+@utility border-ai {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(90deg, #004c97 25%, #0076cf 100%) border-box;
+}
+@utility bg-success-subtle {
+  background-image: linear-gradient(180deg, #e6fff2 0%, #ffffff 100%);
+}

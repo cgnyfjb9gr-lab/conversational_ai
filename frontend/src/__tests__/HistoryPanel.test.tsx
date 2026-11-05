@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import Sidebar from "../Sidebar";
 import type { SessionSummary } from "../api";
+import { HistoryPanel } from "../chat/HistoryPanel";
 
 const sessions: SessionSummary[] = [
   {
@@ -19,26 +19,25 @@ const sessions: SessionSummary[] = [
   },
 ];
 
-function renderSidebar(overrides: Partial<Parameters<typeof Sidebar>[0]> = {}) {
+function renderPanel(overrides: Partial<Parameters<typeof HistoryPanel>[0]> = {}) {
   const props = {
     sessions,
     activeSessionId: "a",
     onSelect: vi.fn(),
-    onNewChat: vi.fn(),
     error: null,
     onRetry: vi.fn(),
     loading: false,
     ...overrides,
   };
-  render(<Sidebar {...props} />);
+  render(<HistoryPanel {...props} />);
   return props;
 }
 
 afterEach(cleanup);
 
-describe("Sidebar", () => {
+describe("HistoryPanel", () => {
   it("lists sessions in the given order with title and last-active time", () => {
-    renderSidebar();
+    renderPanel();
     const items = screen.getAllByRole("button", { name: /topic/ });
     expect(items.map((b) => b.querySelector(".session-title")?.textContent)).toEqual([
       "second topic",
@@ -51,50 +50,47 @@ describe("Sidebar", () => {
   });
 
   it("shows an empty state when there are no sessions", () => {
-    renderSidebar({ sessions: [] });
+    renderPanel({ sessions: [] });
     expect(screen.getByText(/no past chats yet/i)).toBeTruthy();
   });
 
+  it("shows no empty state while loading", () => {
+    renderPanel({ sessions: [], loading: true });
+    expect(screen.queryByText(/no past chats yet/i)).toBeNull();
+  });
+
   it("marks the active session", () => {
-    renderSidebar({ activeSessionId: "a" });
-    const active = screen.getByRole("button", { name: /first topic/ });
-    const other = screen.getByRole("button", { name: /second topic/ });
-    expect(active.getAttribute("aria-current")).toBe("true");
-    expect(other.getAttribute("aria-current")).toBeNull();
+    renderPanel({ activeSessionId: "a" });
+    expect(screen.getByRole("button", { name: /first topic/ }).getAttribute("aria-current")).toBe("true");
+    expect(screen.getByRole("button", { name: /second topic/ }).getAttribute("aria-current")).toBeNull();
   });
 
   it("highlights the active session with a left marker only, not a filled background", () => {
-    renderSidebar({ activeSessionId: "a" });
+    renderPanel({ activeSessionId: "a" });
     const active = screen.getByRole("button", { name: /first topic/ });
     const other = screen.getByRole("button", { name: /second topic/ });
     expect(active.querySelector(".session-marker")).not.toBeNull();
     expect(other.querySelector(".session-marker")).toBeNull();
-    expect(active.className).not.toMatch(/aria-\[current=true\]:bg-/);
+    expect(active.className).toBe(other.className);
   });
 
   it("shows a pointer cursor on every chat in the list", () => {
-    renderSidebar();
+    renderPanel();
     for (const name of [/first topic/, /second topic/]) {
       expect(screen.getByRole("button", { name }).className).toMatch(/\bcursor-pointer\b/);
     }
   });
 
   it("calls onSelect with the session id when an entry is clicked", () => {
-    const props = renderSidebar();
+    const props = renderPanel();
     fireEvent.click(screen.getByRole("button", { name: /second topic/ }));
     expect(props.onSelect).toHaveBeenCalledWith("b");
   });
 
   it("shows the error with a Retry button", () => {
-    const props = renderSidebar({ error: "Couldn't load chats." });
+    const props = renderPanel({ error: "Couldn't load chats." });
     expect(screen.getByRole("alert").textContent).toContain("Couldn't load chats.");
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(props.onRetry).toHaveBeenCalled();
-  });
-
-  it("has a New chat button that calls onNewChat", () => {
-    const props = renderSidebar();
-    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
-    expect(props.onNewChat).toHaveBeenCalled();
   });
 });

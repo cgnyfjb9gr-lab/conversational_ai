@@ -106,13 +106,28 @@ cd frontend && npm install && npm test   # vitest + jsdom, fetch is mocked (no b
 
 ## Frontend: UI kit and theme
 
-- UI components are [shadcn](https://ui.shadcn.com) (Radix variant) with
-  [AI Elements](https://ui.shadcn.com/docs/ai-elements) for the chat. Generated components live in
-  `frontend/src/components/ui/` and are ours to edit.
-- Add a component: `cd frontend && npx shadcn@latest add <name>`.
-- Brand values (Principal theme) live only in `frontend/src/theme/principal.css`. Components use
-  shadcn variables (`bg-primary`, `text-foreground` and so on), never hard-coded colors; a test enforces this.
-  See `specs/003-shadcn-ai-elements/contracts/theme-tokens.md`.
+The UI follows the Figma file *WPI Day 1.5 (P&A and P&E)*, by way of the Alfred mock UI built from it.
+The chat is the full-page Alfred layout (Figma frame A9): header, left icon rail, a History panel for past chats,
+and the "Good morning" welcome (frame S1) on an empty chat.
+
+- **Design tokens** (colors, type scale, radii, shadows, gradients) live only in `frontend/src/styles/theme.css`,
+  as a Tailwind v4 `@theme`. Tailwind's default palette is removed, so classes like `bg-primary`, `text-navy` and
+  `shadow-card` always match the design. No hex colors anywhere else; a test enforces this. Light theme only.
+- **Font:** the design uses FS Elliot Pro (licensed). The app falls back to Source Sans 3 (`@fontsource`).
+- **Reusable components** live in `frontend/src/components/` and are plain React + Tailwind, with unstyled
+  [Radix UI](https://www.radix-ui.com) primitives where behavior matters (tabs, toggle groups):
+
+  | Component | Use |
+  |---|---|
+  | `Button` | `primary`, `secondary`, `link`, `ai` (gradient), `ghost`; sizes `sm`, `md`, `lg`, `icon` |
+  | `Chip`, `ChoiceChips` | Alfred quick replies; pick-one chip group (a radio group for screen readers) |
+  | `TextField`, `Textarea` | Labelled inputs with error state |
+  | `Card`, `StatusTag`, `ProgressBar`, `KeyValueList`, `Tabs` | Dashboard building blocks for the next screens |
+  | `PrincipalLogo`, `PrincipalMark`, `AlfredOrb` | Brand assets from Figma (`src/assets/brand/`) |
+
+- **Chat screens** live in `frontend/src/chat/`, and the demo sign-in in `frontend/src/auth/`.
+- **Sign-in is a demo:** any username and password are accepted, only the username is kept (in `localStorage`),
+  and nothing is checked or sent to the backend. Replace `src/auth/user.ts` with real authentication later.
 - Answer feedback: thumbs up/down, an optional reason and a comment under each reply, sent to
   `POST /api/messages/{message_id}/feedback` (spec 002). Ratings are shown for the current visit only;
   history does not return them yet. See `specs/004-answer-feedback-ui/`.
