@@ -120,6 +120,7 @@ and the "Good morning" welcome (frame S1) on an empty chat.
   | Component | Use |
   |---|---|
   | `Button` | `primary`, `secondary`, `link`, `ai` (gradient), `ghost`; sizes `sm`, `md`, `lg`, `icon` |
+  | `AiButton` | Alfred's full-width gradient call to action (welcome cards) |
   | `Chip`, `ChoiceChips` | Alfred quick replies; pick-one chip group (a radio group for screen readers) |
   | `TextField`, `Textarea` | Labelled inputs with error state |
   | `Card`, `StatusTag`, `ProgressBar`, `KeyValueList`, `Tabs` | Dashboard building blocks for the next screens |

@@ -1,4 +1,4 @@
-import { Bell, History, List, SquarePen, type LucideIcon } from "lucide-react";
+import { Bell, History, List, MessageSquarePlus, type LucideIcon } from "lucide-react";
 import type { ButtonHTMLAttributes } from "react";
 
 import { cn } from "@/lib/cn";
@@ -45,7 +45,9 @@ export function SideRail({
       aria-label="Alfred"
       className="z-30 flex w-12.5 shrink-0 flex-col items-center gap-2 border-r border-line bg-white pt-5 pb-6"
     >
-      <RailButton icon={SquarePen} label="New chat" onClick={onNewChat} />
+      {/* Figma order: Chat, Tasks, History, Notifications. "Chat" starts a new conversation. */}
+      <RailButton icon={MessageSquarePlus} label="New chat" onClick={onNewChat} />
+      <RailButton icon={List} label="Tasks (coming soon)" disabled />
       <RailButton
         icon={History}
         label="History"
@@ -54,7 +56,6 @@ export function SideRail({
         aria-controls="chat-history"
         onClick={onToggleHistory}
       />
-      <RailButton icon={List} label="Tasks (coming soon)" disabled />
       <RailButton icon={Bell} label="Notifications (coming soon)" disabled />
       <span
         aria-hidden

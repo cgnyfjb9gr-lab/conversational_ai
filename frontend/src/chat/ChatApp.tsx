@@ -135,6 +135,7 @@ export function ChatApp({ user, onSignOut }: { user: User; onSignOut: () => void
   }
 
   const waiting = pending.has(activeSessionId);
+  const showWelcome = messages.length === 0 && !waiting;
 
   // Keep the newest message in view (not on the welcome screen, which should start at its greeting).
   useEffect(() => {
@@ -209,11 +210,13 @@ export function ChatApp({ user, onSignOut }: { user: User; onSignOut: () => void
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 bg-linear-to-b from-page to-page/0"
           />
-          <div className="relative min-h-0 flex-1 overflow-y-auto px-6 pt-6 pb-16">
+          {/* The bottom padding keeps the last message clear of the composer's fade. The welcome gets a wider
+              column and is centred in the space left (auto margins, so it still scrolls from the top when it can't fit). */}
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pt-6 pb-16">
             <div
               role="log"
               aria-label="Conversation with Alfred"
-              className="mx-auto flex w-full max-w-190 flex-col gap-6"
+              className={cn("mx-auto flex w-full flex-col gap-6", showWelcome ? "my-auto max-w-250" : "max-w-190")}
             >
               {historyError && !historyOpen && (
                 <div
@@ -226,9 +229,7 @@ export function ChatApp({ user, onSignOut }: { user: User; onSignOut: () => void
                   </button>
                 </div>
               )}
-              {messages.length === 0 && !waiting && (
-                <Welcome name={user.displayName} onAsk={(q) => void sendText(q)} />
-              )}
+              {showWelcome && <Welcome name={user.displayName} onAsk={(q) => void sendText(q)} />}
               {messages.map((m, i) =>
                 m.role === "user" ? (
                   <UserMessage key={`${activeSessionId}-${i}`} text={m.text} time={m.time} />

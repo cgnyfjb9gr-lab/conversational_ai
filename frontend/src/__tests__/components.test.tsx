@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { AiButton } from "../components/AiButton";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Chip } from "../components/Chip";
@@ -53,6 +54,19 @@ describe("Button", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onClick).not.toHaveBeenCalled();
+  });
+});
+
+describe("AiButton", () => {
+  it("is a gradient button with its label and a decorative arrow", () => {
+    const onClick = vi.fn();
+    render(<AiButton onClick={onClick}>Ask Alfred</AiButton>);
+    const button = screen.getByRole("button", { name: "Ask Alfred" });
+    expect(button.getAttribute("type")).toBe("button");
+    expect(button.className).toMatch(/\bbg-ai\b/);
+    expect(button.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    fireEvent.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
   });
 });
 

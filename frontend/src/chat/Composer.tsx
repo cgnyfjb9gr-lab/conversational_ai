@@ -1,5 +1,7 @@
-import { ArrowUp, CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, Plus } from "lucide-react";
 import type { FormEvent, KeyboardEvent } from "react";
+
+import { Soundwave } from "@/components/icons/Soundwave";
 
 /**
  * Alfred's message box (Figma "AI / Composer") with the disclosure line under it.
@@ -34,8 +36,17 @@ export function Composer({
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-14 h-14 bg-linear-to-b from-page/0 to-page" />
       <form
         onSubmit={submit}
-        className="relative flex w-full items-end gap-2 rounded-2xl border border-line bg-white py-2 pr-2 pl-5 shadow-sm focus-within:border-info-400"
+        className="relative flex min-h-12.5 w-full items-end gap-2 rounded-2xl border border-line bg-white py-2 pr-1.5 pl-1.5 shadow-sm focus-within:border-info-400"
       >
+        <button
+          type="button"
+          disabled
+          aria-label="Add attachment (coming soon)"
+          title="Attachments are coming soon"
+          className="grid size-8 shrink-0 place-items-center rounded-full text-ink disabled:cursor-not-allowed disabled:text-subtle"
+        >
+          <Plus aria-hidden className="size-4" />
+        </button>
         <textarea
           aria-label="Message Alfred"
           placeholder="Ask anything about your money…"
@@ -52,12 +63,10 @@ export function Composer({
           disabled={busy}
           className="grid size-8 shrink-0 place-items-center rounded-full bg-ai text-white transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <ArrowUp aria-hidden className="size-4" />
+          <Soundwave className="size-4" />
         </button>
       </form>
-      <p className="text-center text-sm text-muted">
-        AI-generated from demo data. It can be wrong, so check important figures. Not financial advice.
-      </p>
+      <p className="text-center text-sm text-muted">AI-generated from demo data and can be wrong. Not financial advice.</p>
     </div>
   );
 }
