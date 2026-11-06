@@ -85,3 +85,26 @@ describe("sessionStore", () => {
     expect(getSessionIds()).toEqual(["new", "old"]);
   });
 });
+
+describe("sessionStore hardening: blocked localStorage", () => {
+  it("falls back to in-memory storage and keeps working (TC-H04)", async () => {
+    const native = Object.getOwnPropertyDescriptor(window, "localStorage")?.value;
+    vi.resetModules();
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: () => { throw new Error("blocked"); },
+        setItem: () => { throw new Error("blocked"); },
+      },
+    });
+    try {
+      const store = await import("../sessionStore");
+      store.rememberSession("a");
+      expect(store.getSessionIds()).toEqual(["a"]); // in-memory fallback, no crash
+      store.rememberSession("b");
+      expect(store.getSessionIds()).toEqual(["b", "a"]);
+    } finally {
+      Object.defineProperty(window, "localStorage", { configurable: true, value: native });
+    }
+  });
+});

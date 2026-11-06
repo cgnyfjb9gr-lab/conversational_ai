@@ -1,0 +1,66 @@
+# CI gates per Test-Automation-Framework.docx §7 (P1.5).
+# G1 Fast on every push/PR; G4 E2E on the same pins Chromium; L5 eval left for the
+# Ollama machine (hosted runners don't have it) — run via Prep runbook instead.
+
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Frontend unit + build (G1 + G2)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+      - name: Backend unit/API (G1, coverage report)
+        working-directory: backend
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+          .venv/bin/python -m pytest -q --cov=app --cov-report=term
+
+  e2e:
+    needs: fast
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Playwright
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: E2E smoke (G1; backend auto-started by config with SQLite)
+        run: npx playwright test
+        env:
+          CI: "true"
