@@ -144,6 +144,46 @@ PYTHONPATH=src python evals/run_eval.py       # live golden-case eval (needs Oll
 
 Config: `WEALTH_AGENT_PROVIDER` (only `ollama`), `OLLAMA_HOST`, `OLLAMA_MODEL`.
 
+### Agent tracing
+
+Spec: `specs/010-agent-tracing/`. OpenTelemetry traces, one per chat turn: a `wealth_agent.turn` span (session id, prompt
+version, compliance summary) with the Strands agent, cycle, model and tool spans beneath it, plus pass/fail guardrail
+outcomes for tool-input validation (`GR-TOOL-INPUT`) and the disclaimer check (`GR-OUTPUT-DISCLAIMER`). **Off by default**;
+tests and evals never trace.
+
+```bash
+cd agent
+# macOS / Linux
+TRACING_MODE=console PYTHONPATH=src python -m wealth_agent
+# PowerShell
+$env:TRACING_MODE="console"; $env:PYTHONPATH="src"; python -m wealth_agent
+```
+
+| Variable | Meaning |
+|----------|---------|
+| `TRACING_MODE` | `off` (default), `console` (print spans, no AWS) or `adot` (export to AWS CloudWatch) |
+| `TRACING_CAPTURE_CONTENT` | Full prompts, replies and tool data are traced only when the environment is `local`. `true` anywhere else makes the agent refuse to start; non-local runs export metadata only |
+| `DEPLOYMENT_ENVIRONMENT` | `local` by default in console mode; must be set explicitly in `adot` mode |
+
+AWS setup (Transaction Search, 90-day span retention, IAM, dashboard, alarms) is in
+`specs/010-agent-tracing/quickstart.md` Part 2, with the artifacts in `specs/010-agent-tracing/ops/`. The AWS path is
+documented but **not yet verified end to end** (no AWS access yet). Trace summaries expire after 30 days; full spans are kept 90.
+
+**Tracing coverage and future layers.** Only the agent is traced. Not traced yet:
+
+- Backend request spans and the backend-to-agent call (no trace-context propagation yet).
+- Browser/frontend spans.
+- Evals and CI runs (no version comparison over time).
+- `feedback.trace_id`: still always `null`, because returning a trace id from the agent needs a backend-to-agent contract change.
+- User identity (`user.id`); `session.id` is the only correlation id.
+- Real guardrail policy evaluation (Bedrock Guardrails or a rules engine); the prompt's boundary rules are not scored.
+- Prompt registry or content hash (only `prompt.version` is recorded).
+- Alarm notification delivery (alarms are console-only; an SNS topic is future work).
+- Long-term searchable trace summaries and hosted/production content redaction.
+
+Known gaps: no span size cap (CloudWatch rejects spans over 200 KB); a missing disclaimer counts as a failed check, which
+a small local model will hit often, so expect guardrail-failure counts to be noisy.
+
 ## Frontend: structure
 
 `frontend/` is one npm workspace, so run `npm install` once in `frontend/`. If you have an older checkout, delete
@@ -195,6 +235,7 @@ and the "Good morning" welcome (frame S1) on an empty chat.
   | `text-field`, `textarea` | Labelled inputs with error state |
   | `card`, `status-tag`, `progress-bar`, `key-value-list`, `tabs` | Dashboard building blocks for the next screens |
   | `logo`, `soundwave` | Brand assets from Figma (`src/assets/brand/`) and the composer's voice glyph |
+  | `guided-task-icon` | Figma "AI / Guided task icon": a guided task's icon in its light blue tile (spec 010) |
   | `cn` | Joins class names; later Tailwind classes win |
 
 - Add a component as `packages/ui/src/web/<name>.tsx`, using only token classes. Web-only components fail at type

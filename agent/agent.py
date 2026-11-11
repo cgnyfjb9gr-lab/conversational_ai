@@ -14,6 +14,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from wealth_agent.agent import ask, build_agent  # noqa: E402
 from wealth_agent.model import build_model  # noqa: E402
+from wealth_agent.telemetry import configure_tracing  # noqa: E402
+
+# TRACING_MODE (off unless set). A TracingConfigError stops startup on purpose: unsafe content
+# capture must never run. Must happen before the first agent is built.
+configure_tracing()
 
 app = BedrockAgentCoreApp()
 _sessions = {}
@@ -30,7 +35,7 @@ def invoke(payload):
     prompt = payload.get("prompt", "")
     session_id = payload.get("session_id") or "default"
     # TODO: intent classification
-    return {"reply": ask(_agent_for(session_id), prompt), "intent": None}
+    return {"reply": ask(_agent_for(session_id), prompt, session_id=session_id), "intent": None}
 
 
 if __name__ == "__main__":
