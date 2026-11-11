@@ -137,3 +137,33 @@ def test_strands_wrappers_return_handler_output():
     by_name = {tool_spec(t)["name"]: t for t in STRANDS_TOOLS}
     out = by_name["project_savings"](**GOOD_PROJECTION)
     assert out["ok"] is True
+
+
+# --- Tracing (spec 010) --------------------------------------------------------------------------
+
+from wealth_agent.guardrails import GR_TOOL_INPUT, bind_guardrails  # noqa: E402
+
+
+def test_tool_guardrail_pass():
+    with bind_guardrails() as turn:
+        handle_get_holdings({})
+    (check,) = turn.checks
+    assert (check.rule_id, check.result, check.action) == (GR_TOOL_INPUT, "pass", "allow")
+    assert check.tool_name == "get_holdings"
+
+
+def test_tool_guardrail_fail_keeps_the_existing_error():
+    with bind_guardrails() as turn:
+        result = handle_project_savings(
+            {"initial_amount": 1, "monthly_contribution": 1, "annual_return_pct": 5, "years": 0}
+        )
+    (check,) = turn.checks
+    assert result["ok"] is False
+    assert (check.result, check.action) == ("fail", "return_error")
+    assert check.reason == result["error"]
+    assert check.tool_name == "project_savings"
+
+
+def test_handlers_outside_a_turn_are_unaffected():
+    assert handle_get_holdings({})["ok"] is True
+    assert handle_project_savings({})["ok"] is False

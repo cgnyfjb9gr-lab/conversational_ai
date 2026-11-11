@@ -1,0 +1,61 @@
+{
+  "_comment": "Apply each entry with: aws cloudwatch put-metric-alarm --cli-input-json file://<entry>. No alarm actions on purpose: notifications are console-only in this version (SNS is future work). Metric names come from ops/metric-filters.md.",
+  "Alarms": [
+    {
+      "AlarmName": "convai-wealth-agent-error-rate",
+      "AlarmDescription": "Agent turn error rate above 5% over 5 minutes",
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Threshold": 5,
+      "EvaluationPeriods": 1,
+      "TreatMissingData": "notBreaching",
+      "Metrics": [
+        { "Id": "e1", "Expression": "IF(m2>0, 100*m1/m2, 0)", "Label": "error rate %", "ReturnData": true },
+        { "Id": "m1", "MetricStat": { "Metric": { "Namespace": "ConvAI/WealthAgent", "MetricName": "AgentErrors" }, "Period": 300, "Stat": "Sum" }, "ReturnData": false },
+        { "Id": "m2", "MetricStat": { "Metric": { "Namespace": "ConvAI/WealthAgent", "MetricName": "AgentTurns" }, "Period": 300, "Stat": "Sum" }, "ReturnData": false }
+      ]
+    },
+    {
+      "AlarmName": "convai-wealth-agent-guardrail-failure",
+      "AlarmDescription": "Any turn with a failed guardrail check in 5 minutes (expected to be noisy: a missing disclaimer counts)",
+      "Namespace": "ConvAI/WealthAgent",
+      "MetricName": "GuardrailFailures",
+      "Statistic": "Sum",
+      "Period": 300,
+      "EvaluationPeriods": 1,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Threshold": 0,
+      "TreatMissingData": "notBreaching"
+    },
+    {
+      "AlarmName": "convai-wealth-agent-tool-error-rate",
+      "AlarmDescription": "Tool error rate above 10% over 5 minutes",
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Threshold": 10,
+      "EvaluationPeriods": 1,
+      "TreatMissingData": "notBreaching",
+      "Metrics": [
+        { "Id": "e1", "Expression": "IF(m2>0, 100*m1/m2, 0)", "Label": "tool error rate %", "ReturnData": true },
+        { "Id": "m1", "MetricStat": { "Metric": { "Namespace": "ConvAI/WealthAgent", "MetricName": "ToolErrors" }, "Period": 300, "Stat": "Sum" }, "ReturnData": false },
+        { "Id": "m2", "MetricStat": { "Metric": { "Namespace": "ConvAI/WealthAgent", "MetricName": "ToolCalls" }, "Period": 300, "Stat": "Sum" }, "ReturnData": false }
+      ]
+    },
+    {
+      "AlarmName": "convai-wealth-agent-p95-latency",
+      "AlarmDescription": "p95 turn latency above 8 seconds over 5 minutes. Needs CloudWatch Application Signals; dimensions are unverified until the first AWS run. Without Application Signals use the average-duration fallback in ops/metric-filters.md (a POC approximation).",
+      "Namespace": "ApplicationSignals",
+      "MetricName": "Latency",
+      "Dimensions": [
+        { "Name": "Service", "Value": "convai-wealth-agent" },
+        { "Name": "Environment", "Value": "<application-signals-environment>" },
+        { "Name": "Operation", "Value": "wealth_agent.turn" }
+      ],
+      "ExtendedStatistic": "p95",
+      "Period": 300,
+      "EvaluationPeriods": 1,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "Threshold": 8000,
+      "Unit": "Milliseconds",
+      "TreatMissingData": "notBreaching"
+    }
+  ]
+}

@@ -4,7 +4,8 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
     "bedrock-agentcore",
-    "strands-agents[ollama]==1.63.0",
+    "strands-agents[ollama,otel]==1.63.0",
+    "aws-opentelemetry-distro==0.22.0",
     "ollama==0.6.3",
 ]
 

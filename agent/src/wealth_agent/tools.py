@@ -13,6 +13,7 @@ from typing import Any
 from strands import tool
 
 from wealth_agent import portfolio as pf
+from wealth_agent.guardrails import GR_TOOL_INPUT, record_check
 
 # Bounds (FR-003)
 INITIAL_MAX = 1e9
@@ -61,16 +62,31 @@ def _check_args(args: Any, allowed: set[str]) -> dict:
     return args
 
 
+def _record_tool_outcome(name: str, result: dict) -> None:
+    """GR-TOOL-INPUT (spec 010): the validation outcome, on the current tool span and turn."""
+    if result.get("ok"):
+        record_check(
+            GR_TOOL_INPUT, "pass", "arguments accepted", "allow", name, span_attributes=True
+        )
+    else:
+        reason = str(result.get("error", "tool returned an error"))
+        record_check(GR_TOOL_INPUT, "fail", reason, "return_error", name, span_attributes=True)
+
+
 def _safe(fn: Callable[[Any], dict]) -> Callable[[Any], dict]:
+    tool_name = fn.__name__.removeprefix("handle_")
+
     def wrapper(args: Any) -> dict:
         try:
-            return {"ok": True, **fn(args)}
+            result = {"ok": True, **fn(args)}
         except ToolInputError as exc:
-            return {"ok": False, "error": str(exc)}
+            result = {"ok": False, "error": str(exc)}
         except pf.PortfolioDataError:
-            return {"ok": False, "error": "portfolio data is unavailable"}
+            result = {"ok": False, "error": "portfolio data is unavailable"}
         except Exception:  # noqa: BLE001 - tools must never raise to the agent
-            return {"ok": False, "error": "internal error"}
+            result = {"ok": False, "error": "internal error"}
+        _record_tool_outcome(tool_name, result)  # never raises
+        return result
 
     wrapper.__name__ = fn.__name__
     return wrapper

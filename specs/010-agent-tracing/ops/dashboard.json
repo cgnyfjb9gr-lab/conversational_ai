@@ -1,0 +1,68 @@
+{
+  "widgets": [
+    {
+      "type": "log", "x": 0, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "title": "Agent turns per minute",
+        "region": "<region>", "view": "timeSeries", "stacked": false,
+        "query": "SOURCE 'aws/spans' | filter name = 'wealth_agent.turn' | stats count() as turns by bin(1m)"
+      }
+    },
+    {
+      "type": "metric", "x": 12, "y": 0, "width": 12, "height": 6,
+      "properties": {
+        "title": "Agent error rate (%)",
+        "region": "<region>", "view": "timeSeries", "stat": "Sum", "period": 300,
+        "metrics": [
+          [ { "expression": "IF(m2>0, 100*m1/m2, 0)", "label": "error rate %", "id": "e1" } ],
+          [ "ConvAI/WealthAgent", "AgentErrors", { "id": "m1", "visible": false } ],
+          [ "ConvAI/WealthAgent", "AgentTurns", { "id": "m2", "visible": false } ]
+        ]
+      }
+    },
+    {
+      "type": "metric", "x": 0, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "title": "Tool error rate (%)",
+        "region": "<region>", "view": "timeSeries", "stat": "Sum", "period": 300,
+        "metrics": [
+          [ { "expression": "IF(m2>0, 100*m1/m2, 0)", "label": "tool error rate %", "id": "e1" } ],
+          [ "ConvAI/WealthAgent", "ToolErrors", { "id": "m1", "visible": false } ],
+          [ "ConvAI/WealthAgent", "ToolCalls", { "id": "m2", "visible": false } ]
+        ]
+      }
+    },
+    {
+      "type": "log", "x": 12, "y": 6, "width": 12, "height": 6,
+      "properties": {
+        "title": "Turn latency p50 / p95 (seconds)",
+        "region": "<region>", "view": "timeSeries", "stacked": false,
+        "query": "SOURCE 'aws/spans' | filter name = 'wealth_agent.turn' | stats pct(durationNano/1000000000, 50) as p50, pct(durationNano/1000000000, 95) as p95 by bin(5m)"
+      }
+    },
+    {
+      "type": "log", "x": 0, "y": 12, "width": 12, "height": 6,
+      "properties": {
+        "title": "Token usage (model calls, where reported)",
+        "region": "<region>", "view": "timeSeries", "stacked": false,
+        "query": "SOURCE 'aws/spans' | filter name = 'chat' | stats sum(attributes.`gen_ai.usage.input_tokens`) as input_tokens, sum(attributes.`gen_ai.usage.output_tokens`) as output_tokens by bin(5m)"
+      }
+    },
+    {
+      "type": "log", "x": 12, "y": 12, "width": 12, "height": 6,
+      "properties": {
+        "title": "Turns by compliance status",
+        "region": "<region>", "view": "bar",
+        "query": "SOURCE 'aws/spans' | filter name = 'wealth_agent.turn' | stats count() as turns by attributes.compliance_status"
+      }
+    },
+    {
+      "type": "log", "x": 0, "y": 18, "width": 24, "height": 6,
+      "properties": {
+        "title": "Failed guardrail rules (last turns)",
+        "region": "<region>", "view": "table",
+        "query": "SOURCE 'aws/spans' | filter name = 'wealth_agent.turn' and attributes.compliance_status = 'fail' | fields @timestamp, attributes.`session.id` as session, attributes.compliance_failed_rules as failed_rules, traceId | sort @timestamp desc | limit 50"
+      }
+    }
+  ]
+}

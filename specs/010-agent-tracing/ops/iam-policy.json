@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SendTracesToXRayOtlpEndpoint",
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "WriteAgentObservabilityLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": [
+        "arn:aws:logs:<region>:<account-id>:log-group:/aws/bedrock-agentcore/runtimes/convai-wealth-agent",
+        "arn:aws:logs:<region>:<account-id>:log-group:/aws/bedrock-agentcore/runtimes/convai-wealth-agent:*"
+      ]
+    }
+  ]
+}
